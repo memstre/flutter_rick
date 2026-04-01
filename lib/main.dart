@@ -13,15 +13,16 @@ class RickMortyScreen extends StatefulWidget {
 class Character {
   final String name;
   final String image;
-  final String species;
+  final String status;
+  bool isLiked = false;
 
-  Character({required this.name, required this.image, required this.species});
+  Character({required this.name, required this.image, required this.status});
 
   factory Character.fromJson(Map<String, dynamic> json) {
     return Character(
       name: json['name'],
       image: json['image'],
-      species: json['species'],
+      status: json['status'],
     );
   }
 }
@@ -58,9 +59,12 @@ class _RickMortyState extends State<RickMortyScreen> {
         itemBuilder: (context, index) {
           final person = characters[index];
           return ListTile(
-            leading: CircleAvatar(backgroundImage: NetworkImage(person.image)),
+            leading: Hero(
+              tag: person.image,
+              child: CircleAvatar(backgroundImage: NetworkImage(person.image)),
+            ),
             title: Text(person.name),
-            subtitle: Text(person.species),
+            subtitle: Text(person.status),
             onTap: () {
               Navigator.push(
                 context,
@@ -68,7 +72,13 @@ class _RickMortyState extends State<RickMortyScreen> {
                   builder: (context) => DetailScreen(
                     name: person.name,
                     image: person.image,
-                    species: person.species,
+                    status: person.status,
+                    isLiked: person.isLiked,
+                    onLikeToggle: (newValue) {
+                      setState(() {
+                        person.isLiked = newValue;
+                      });
+                    },
                   ),
                 ),
               );
@@ -80,26 +90,54 @@ class _RickMortyState extends State<RickMortyScreen> {
   }
 }
 
-class DetailScreen extends StatelessWidget {
+class DetailScreen extends StatefulWidget {
   final String name;
   final String image;
-  final String species;
+  final String status;
+  final bool isLiked;
+  final Function(bool) onLikeToggle;
 
-  DetailScreen({required this.name, required this.image, required this.species});
+  const DetailScreen({super.key, required this.name, required this.image, required this.status, required this.isLiked, required this.onLikeToggle,});
+
+  @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  late bool localIsLiked;
+
+  @override
+  void initState() {
+    super.initState();
+    localIsLiked = widget.isLiked;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('This is details about ${name}')),
+      appBar: AppBar(title: Text('This is details about ${widget.name}')),
       body: Center(
         child: Column(
           children: [
-            image.isEmpty ? CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.blue), strokeWidth: 4.0,) :
-            ClipRRect(borderRadius: BorderRadius.circular(20), child: Image.network(image, height: 250)),
             const SizedBox(height: 20),
+            Hero(
+              tag: widget.image,
+              child: ClipRRect(borderRadius: BorderRadius.circular(20), child: widget.image.isEmpty
+                    ? CircularProgressIndicator() : Image.network(widget.image, height: 250))),
             const SizedBox(height: 20),
-            Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            Text('species: $species', style: TextStyle(fontSize: 18)),
+            Text(widget.name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            Text('status: ${widget.status}', style: TextStyle(fontSize: 18, color: widget.status == 'Alive' ? Colors.green : Colors.red)),
+            IconButton(
+              iconSize: localIsLiked ? 50 : 50 * 1.5,
+              icon: Icon(localIsLiked ? Icons.favorite : Icons.favorite_border),
+              color: Colors.red,
+              onPressed: () {
+                setState(() {
+                  localIsLiked = !localIsLiked;
+                });
+                widget.onLikeToggle(localIsLiked);
+              },
+            ),
           ],
         ),
       )
