@@ -2,7 +2,61 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-void main() => runApp(const MaterialApp(home: RickMortyScreen()));
+void main() => runApp(MaterialApp(
+  debugShowCheckedModeBanner: false,
+  theme: ThemeData.dark(useMaterial3: true).copyWith(
+    scaffoldBackgroundColor: const Color(0xFF0D0D0D),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.greenAccent,
+      brightness: Brightness.dark,
+    ),
+  ),
+  home: const WelcomeScreen(),
+));
+
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1A1A1A), Color(0xFF0D0D0D)],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.rocket_launch, size: 100, color: Colors.greenAccent),
+            const SizedBox(height: 30),
+            const Text(
+              "Wubba Lubba Dub Dub!",
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            const SizedBox(height: 10),
+            const Text("Explore the world of Rick and Morty", style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 50),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.greenAccent,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RickMortyScreen())),
+              child: const Text("Get Schwifty", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class RickMortyScreen extends StatefulWidget {
   const RickMortyScreen({super.key});
