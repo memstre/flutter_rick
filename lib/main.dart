@@ -74,9 +74,9 @@ class _RickMortyState extends State<RickMortyScreen> {
                     image: person.image,
                     status: person.status,
                     isLiked: person.isLiked,
-                    onLikeToggle: (newValue) {
+                    onLikeToggle: (newliked) {
                       setState(() {
-                        person.isLiked = newValue;
+                        person.isLiked = newliked;
                       });
                     },
                   ),
@@ -105,11 +105,27 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   late bool localIsLiked;
+  List<Offset> _tapPositions = [];
 
   @override
   void initState() {
     super.initState();
     localIsLiked = widget.isLiked;
+  }
+
+  void _handleDoubleTap(TapDownDetails details) {
+    setState(() {
+      localIsLiked = true;
+      _tapPositions.add(details.localPosition);
+    });
+    widget.onLikeToggle(true);
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          _tapPositions.removeAt(0);
+        });
+      }
+    });
   }
 
   @override
@@ -120,15 +136,28 @@ class _DetailScreenState extends State<DetailScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            Hero(
-              tag: widget.image,
-              child: ClipRRect(borderRadius: BorderRadius.circular(20), child: widget.image.isEmpty
-                    ? CircularProgressIndicator() : Image.network(widget.image, height: 250))),
+            GestureDetector(
+              onDoubleTapDown: _handleDoubleTap,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [Hero(
+                    tag: widget.image,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.network(widget.image))),
+                  ..._tapPositions.map((pos) => Positioned(
+                    left: pos.dx - 40,
+                    top: pos.dy - 40,
+                    child: const Icon(Icons.favorite, color: Colors.white, size: 80),
+                  )),
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
             Text(widget.name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
             Text('status: ${widget.status}', style: TextStyle(fontSize: 18, color: widget.status == 'Alive' ? Colors.green : Colors.red)),
             IconButton(
-              iconSize: localIsLiked ? 50 : 50 * 1.5,
+              iconSize: !localIsLiked ? 50 : 50 * 1.5,
               icon: Icon(localIsLiked ? Icons.favorite : Icons.favorite_border),
               color: Colors.red,
               onPressed: () {
