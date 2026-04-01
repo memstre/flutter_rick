@@ -90,6 +90,84 @@ class _RickMortyState extends State<RickMortyScreen> {
   }
 }
 
+class FloatingHeart extends StatefulWidget {
+  final Offset position;
+  final VoidCallback onAnimationComplete;
+
+  const FloatingHeart({
+    super.key,
+    required this.position,
+    required this.onAnimationComplete,
+  });
+
+  @override
+  State<FloatingHeart> createState() => _FloatingHeartState();
+}
+
+class _FloatingHeartState extends State<FloatingHeart> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacityAnimation;
+  late Animation<double> _travelAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0, curve: Curves.easeIn)),
+    );
+
+    _travelAnimation = Tween<double>(begin: 0.0, end: -100.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    _controller.forward().then((_) {
+      widget.onAnimationComplete();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const double heartSize = 80.0;
+
+    return Positioned(
+      left: widget.position.dx - (heartSize / 2),
+      top: widget.position.dy - (heartSize / 2),
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, _travelAnimation.value),
+              child: Opacity(
+                opacity: _opacityAnimation.value,
+                child: child,
+              ),
+            );
+          },
+          child: const Icon(
+            Icons.favorite,
+            color: Colors.white,
+            size: heartSize,
+            shadows: [Shadow(blurRadius: 15, color: Colors.black54)],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class DetailScreen extends StatefulWidget {
   final String name;
   final String image;
@@ -105,27 +183,23 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   late bool localIsLiked;
-  List<Offset> _tapPositions = [];
+  List<MapEntry<UniqueKey, Offset>> _heartData = [];
+
+  void _handleDoubleTap(TapDownDetails details) {
+    final key = UniqueKey();
+
+    setState(() {
+      localIsLiked = true;
+      _heartData.add(MapEntry(key, details.localPosition));
+    });
+
+    widget.onLikeToggle(true);
+  }
 
   @override
   void initState() {
     super.initState();
     localIsLiked = widget.isLiked;
-  }
-
-  void _handleDoubleTap(TapDownDetails details) {
-    setState(() {
-      localIsLiked = true;
-      _tapPositions.add(details.localPosition);
-    });
-    widget.onLikeToggle(true);
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          _tapPositions.removeAt(0);
-        });
-      }
-    });
   }
 
   @override
@@ -145,10 +219,16 @@ class _DetailScreenState extends State<DetailScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: Image.network(widget.image))),
-                  ..._tapPositions.map((pos) => Positioned(
-                    left: pos.dx - 40,
-                    top: pos.dy - 40,
-                    child: const Icon(Icons.favorite, color: Colors.white, size: 80),
+                  ..._heartData.map((entry) => FloatingHeart(
+                    key: entry.key,
+                    position: entry.value,
+                    onAnimationComplete: () {
+                      if (mounted) {
+                        setState(() {
+                          _heartData.removeWhere((item) => item.key == entry.key);
+                        });
+                      }
+                    },
                   )),
                 ],
               ),
