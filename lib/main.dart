@@ -107,36 +107,65 @@ class _RickMortyState extends State<RickMortyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Rick and Morty animations')),
+      appBar: AppBar(
+        title: const Text('Characters', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: ListView.builder(
+        padding: const EdgeInsets.all(12),
         itemCount: characters.length,
         itemBuilder: (context, index) {
           final person = characters[index];
-          return ListTile(
-            leading: Hero(
-              tag: person.image,
-              child: CircleAvatar(backgroundImage: NetworkImage(person.image)),
-            ),
-            title: Text(person.name),
-            subtitle: Text(person.status),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DetailScreen(
-                    name: person.name,
-                    image: person.image,
-                    status: person.status,
-                    isLiked: person.isLiked,
-                    onLikeToggle: (newliked) {
-                      setState(() {
-                        person.isLiked = newliked;
-                      });
-                    },
-                  ),
+          return Card(
+            color: const Color(0xFF1E1E1E),
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(10),
+              leading: Hero(
+                tag: person.image,
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundImage: NetworkImage(person.image),
                 ),
-              );
-            },
+              ),
+              title: Text(person.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              subtitle: Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: person.status == 'Alive' ? Colors.greenAccent : Colors.redAccent,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(person.status, style: const TextStyle(color: Colors.grey)),
+                ],
+              ),
+              trailing: Icon(person.isLiked ? Icons.favorite : Icons.favorite_border, color: Colors.redAccent),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailScreen(
+                      name: person.name,
+                      image: person.image,
+                      status: person.status,
+                      isLiked: person.isLiked,
+                      onLikeToggle: (newliked) {
+                        setState(() {
+                          person.isLiked = newliked;
+                        });
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),
