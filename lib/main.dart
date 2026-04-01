@@ -288,7 +288,8 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('This is details about ${widget.name}')),
+      backgroundColor: const Color(0xFF0D0D0D),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Center(
         child: Column(
           children: [
@@ -297,11 +298,20 @@ class _DetailScreenState extends State<DetailScreen> {
               onDoubleTapDown: _handleDoubleTap,
               child: Stack(
                 alignment: Alignment.center,
-                children: [Hero(
-                    tag: widget.image,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.network(widget.image))),
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [BoxShadow(color: Colors.greenAccent.withOpacity(0.2), blurRadius: 20, spreadRadius: 5)],
+                    ),
+                    child: Hero(
+                      tag: widget.image,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(25),
+                        child: Image.network(widget.image, height: 320, fit: BoxFit.cover),
+                      ),
+                    ),
+                  ),
                   ..._heartData.map((entry) => FloatingHeart(
                     key: entry.key,
                     position: entry.value,
@@ -316,13 +326,32 @@ class _DetailScreenState extends State<DetailScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            Text(widget.name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            Text('status: ${widget.status}', style: TextStyle(fontSize: 18, color: widget.status == 'Alive' ? Colors.green : Colors.red)),
+            const SizedBox(height: 30),
+            Text(widget.name, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: widget.status == 'Alive' ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'Status: ${widget.status}',
+                style: TextStyle(fontSize: 18, color: widget.status == 'Alive' ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.w500),
+              ),
+            ),
+            const Spacer(),
             IconButton(
-              iconSize: !localIsLiked ? 50 : 50 * 1.5,
-              icon: Icon(localIsLiked ? Icons.favorite : Icons.favorite_border),
-              color: Colors.red,
+              iconSize: 70,
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                child: Icon(
+                  localIsLiked ? Icons.favorite : Icons.favorite_border,
+                  key: ValueKey(localIsLiked),
+                  color: Colors.redAccent,
+                ),
+              ),
               onPressed: () {
                 setState(() {
                   localIsLiked = !localIsLiked;
@@ -330,9 +359,10 @@ class _DetailScreenState extends State<DetailScreen> {
                 widget.onLikeToggle(localIsLiked);
               },
             ),
+            const SizedBox(height: 50),
           ],
         ),
-      )
+      ),
     );
   }
 }
